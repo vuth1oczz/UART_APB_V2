@@ -79,21 +79,14 @@ always_ff @(posedge clk, negedge reset_n) begin
 
 
 //uart side
-    always_ff @(posedge clk, negedge reset_n) begin
-        if (!reset_n) begin
-            rx_data_reg <= 0;
-            stt_reg <= 0;
-        end
-        else begin
+always_ff @(posedge clk, negedge reset_n) begin
             rx_data_reg <= rx_data;
             stt_reg[0] <= tx_done;
             stt_reg[1] <= rx_done;
             stt_reg[2] <= parity_error;
-           
-        end
-    end
+end
 
-    always_comb begin
+always_comb begin
         tx_data         = tx_data_reg [7:0];
         data_bit_num    = cfg_reg [1:0];
         stop_bit_num    = cfg_reg [2];
