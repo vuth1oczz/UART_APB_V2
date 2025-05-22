@@ -1,6 +1,6 @@
 module uart_tx 
 #(
-    parameter baute_rate = 15  
+    parameter baud_rate = 115200
 )
 (
     input clk,
@@ -17,6 +17,13 @@ module uart_tx
     output tx
   
 );
+localparam BAUD_RATE = baud_rate;
+logic Bclk;
+bclk_gen #(.baud_rate(BAUD_RATE)) bclk_gen(
+    .clk(clk),
+    .reset_n(reset_n),
+    .Bclk(Bclk)
+);
 
 
 logic [3:0] data_bit_target;
@@ -24,7 +31,7 @@ logic parity_bit;
 
 localparam even =1'b1;
 localparam odd = 1'b0;
-logic[4:0] divisor = baute_rate;
+
 
 logic [3:0] count, count_next;
 logic bit_done;
@@ -78,8 +85,16 @@ always_comb begin : PROCESS_DATABIT_NUM_AND_PARITY_BIT
     endcase  
 end
 always_comb begin
-    if(count_en) count_next = count +1;
-    else count_next = count;
+    if(count_en) begin
+        if(Bclk) begin
+            count_next = count +1;
+        end else begin
+            count_next = count;
+        end
+    end else begin
+        count_next = 0;
+    end
+    
 end
 
 always_ff @( posedge clk, negedge reset_n ) begin : GENARTE_BAUTE
@@ -88,7 +103,7 @@ always_ff @( posedge clk, negedge reset_n ) begin : GENARTE_BAUTE
         bit_done <= 0;
     end else 
     if(count_en) begin
-        if(count == divisor ) begin
+        if(count == 15 ) begin
             bit_done <= 1'b1;
             count <=0;
         end else begin
@@ -146,7 +161,7 @@ always_comb begin : PROCESS_NEXT_STATE
         end
         PARITY_BIT: begin
             tx_o = parity_bit;
-            count_en = 'b1;
+            count_en = 1'b1;
      
             if(bit_done) begin
                     next_state = STOP_BIT_FIRST;  

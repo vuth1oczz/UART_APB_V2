@@ -1,6 +1,6 @@
 module uart_rx
 #(
-    parameter baud_rate = 15
+    parameter baud_rate = 115200
 )
  (
     
@@ -26,17 +26,21 @@ module uart_rx
     logic [3:0]count, count_next;
     logic [4:0] baud, baud_next;
     logic [7:0] rx_reg, rx_reg_next;
- 
 
-
-
- 
-    logic [4:0] divisor = baud_rate;
     logic parity_bit;
 
     logic baud_en;
     logic bit_done;
     logic [1:0] reg_stop_bit_next, reg_stop_bit, count_stop_bit_next, count_stop_bit;
+
+
+    localparam BAUD_RATE = baud_rate;
+    logic Bclk;
+    bclk_gen #(.baud_rate(BAUD_RATE)) bclk_gen(
+        .clk(clk),
+        .reset_n(reset_n),
+        .Bclk(Bclk)
+    );
     always_comb begin
         case (data_bit_num)
             2'b00: count_data = 4'd5;
@@ -186,22 +190,28 @@ module uart_rx
 
 
 always_comb begin
-    if(baud_en) baud_next = baud +1;
-    else baud_next = baud;
+    if(baud_en) begin
+        if(Bclk) begin
+         baud_next = baud +1;
+        end else begin
+            baud_next = baud;
+        end
+    end else begin
+         baud_next = 0;
+    end
 end
 
 
 always_ff @(posedge clk, negedge reset_n) begin
-          if(~reset_n) begin
+    if(~reset_n) begin
                 baud <= 0;
                 bit_done <= 0;
-            end else if(baud_en) begin
-                 if(baud == divisor-1 ) begin
+    end else if(baud_en) begin
+            if(baud == 15 ) begin
                         bit_done <= 1'b1;
                         baud <=0;
                         
-                       
-                end else begin
+            end else begin
                         baud <= baud_next;
                         bit_done = 1'b0;
         end 

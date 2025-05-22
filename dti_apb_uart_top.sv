@@ -1,5 +1,7 @@
 module dti_apb_uart_top
-#(parameter baud_rate= 15) 
+#(
+    parameter baud_rate= 115200
+) 
 (
     input clk,
     input reset_n,
@@ -23,7 +25,7 @@ module dti_apb_uart_top
     input cts_n
 
 );
-
+localparam BAUD_RATE = baud_rate;
 logic [31:0] rdata;
 
 logic [11:0] waddr;
@@ -89,7 +91,7 @@ register register_block (
     .start_tx(start_tx)
 );
 
-uart_tx #(.baute_rate(15)) tx_dut (
+uart_tx #(.baud_rate(BAUD_RATE)) tx_dut (
     .clk(clk),
     .reset_n(reset_n),
     .tx_data(tx_data),
@@ -102,7 +104,7 @@ uart_tx #(.baute_rate(15)) tx_dut (
     .tx(tx)
 );
 
-uart_rx #(.baud_rate(15)) rx_dut (
+uart_rx #(.baud_rate(BAUD_RATE)) rx_dut (
     .clk(clk),
     .reset_n(reset_n),
     .data_bit_num(data_bit_num),
